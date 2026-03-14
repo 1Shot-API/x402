@@ -7,6 +7,7 @@ This directory contains TypeScript server examples demonstrating how to protect 
 | Directory | Description |
 | --- | --- |
 | [`express/`](./express/) | Using `@x402/express` middleware |
+| [`1shotapi-example/`](./1shotapi-example/) | Express middleware with `@1shotapi/x402-facilitator` |
 | [`hono/`](./hono/) | Using `@x402/hono` middleware |
 | [`advanced/`](./advanced/) | Advanced patterns: hooks, dynamic pricing, custom tokens |
 | [`custom/`](./custom/) | Manual implementation using only `@x402/core` |
