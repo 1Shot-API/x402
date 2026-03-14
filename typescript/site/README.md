@@ -35,10 +35,11 @@ x402 is an open protocol for internet-native payments built around the HTTP 402 
 2. Configure your environment variables in `.env`:
 
   ```bash
-  NEXT_PUBLIC_FACILITATOR_URL=your_facilitator_url
-  RESOURCE_WALLET_ADDRESS=your_wallet_address
-  NETWORK=sepolia
-  PRIVATE_KEY=your_private_key
+  FACILITATOR_URL=your_facilitator_url
+  RESOURCE_EVM_ADDRESS=your_evm_wallet_address
+  RESOURCE_SVM_ADDRESS=your_solana_wallet_address
+  FACILITATOR_EVM_PRIVATE_KEY=your_evm_private_key
+  FACILITATOR_SVM_PRIVATE_KEY=your_solana_private_key
   ```
 
 ### Running the Development Server
@@ -79,7 +80,31 @@ We welcome projects that are building with x402! To add your project to our ecos
   "description": "A brief description of your project and how it uses x402",
   "logoUrl": "/logos/your-logo.png",
   "websiteUrl": "https://your-project.com", // ideally pointing to somehwere to learn more about the x402 integration
-  "category": "Client-Side Integrations" // Must match one of our categories: - `Client-Side Integrations`, `Services/Endpoints`, `Ecosystem Infrastructure & Tooling`, `Learning & Community Resources`
+  "category": "Client-Side Integrations" // Must match one of our categories: - `Client-Side Integrations`, `Services/Endpoints`, `Infrastructure & Tooling`, `Learning & Community Resources`
+}
+```
+
+**For Facilitators, use this JSON template:**
+
+```json
+{
+  "name": "Your Facilitator Name",
+  "description": "A brief description of your facilitator service and supported networks",
+  "logoUrl": "/logos/your-logo.png",
+  "websiteUrl": "https://your-facilitator.com",
+  "category": "Facilitators",
+  "facilitator": {
+    "baseUrl": "https://your-facilitator.com",
+    "networks": ["base", "base-sepolia", "polygon", "solana"],
+    "schemes": ["exact"],
+    "assets": ["ERC20"],
+    "supports": {
+      "verify": true,
+      "settle": true,
+      "supported": true,
+      "list": false
+    }
+  }
 }
 ```
 
@@ -98,7 +123,7 @@ We welcome projects that are building with x402! To add your project to our ecos
 - Should include API documentation
 - Should maintain 99% uptime
 
-#### Ecosystem Infrastructure & Tooling
+#### Infrastructure & Tooling
 - Should include comprehensive documentation
 - Should demonstrate clear value to the x402 ecosystem
 
@@ -107,6 +132,13 @@ We welcome projects that are building with x402! To add your project to our ecos
 - Should be shared on social media (Twitter/X, Discord, etc.)
 - Must include clear setup instructions
 - Should demonstrate a practical use case
+
+#### Facilitators
+- Must implement the x402 facilitator API specification
+- Should support at least one payment scheme (e.g., "exact")
+- Must provide working verify and/or settle endpoints
+- Should maintain high uptime and reliability
+- Must include comprehensive API documentation
 
 ### Review Process
 
@@ -134,4 +166,4 @@ We welcome contributions! Please see our [Contributing Guidelines](https://githu
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](https://github.com/coinbase/x402/blob/main/LICENSE.md) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/coinbase/x402/blob/main/LICENSE) file for details.

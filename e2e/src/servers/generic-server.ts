@@ -67,17 +67,50 @@ export class GenericServerProxy extends BaseProxy implements ServerProxy {
   async start(config: ServerConfig): Promise<void> {
     this.port = config.port;
 
+    // Check if this is a v1 (legacy) server based on directory name
+    const isV1Server = this.directory.includes('legacy/');
+
+    verboseLog(`  📂 Server directory: ${this.directory}, isV1: ${isV1Server}`);
+
+    // For legacy servers, translate CAIP-2 to v1 network names
+    let evmNetwork = config.networks.evm.caip2;
+    let svmNetwork = config.networks.svm.caip2;
+
+    if (isV1Server) {
+      evmNetwork = translateNetworkForV1(config.networks.evm.caip2);
+      svmNetwork = translateNetworkForV1(config.networks.svm.caip2);
+
+      verboseLog(`  🔄 Translating networks for v1 server: ${config.networks.evm.caip2} → ${evmNetwork}, ${config.networks.svm.caip2} → ${svmNetwork}`);
+    }
+
     const runConfig: RunConfig = {
       port: config.port,
       env: {
-        USE_CDP_FACILITATOR: config.useCdpFacilitator.toString(),
-        CDP_API_KEY_ID: process.env.CDP_API_KEY_ID || '',
-        CDP_API_KEY_SECRET: process.env.CDP_API_KEY_SECRET || '',
-        EVM_NETWORK: config.evmNetwork,
-        EVM_ADDRESS: config.evmPayTo,
-        SVM_NETWORK: config.svmNetwork,
-        SVM_ADDRESS: config.svmPayTo,
-        PORT: config.port.toString()
+        PORT: config.port.toString(),
+
+        // EVM network config
+        EVM_NETWORK: evmNetwork,
+        EVM_RPC_URL: config.networks.evm.rpcUrl,
+        EVM_PAYEE_ADDRESS: config.evmPayTo,
+        EVM_PERMIT2_ASSET: config.networks.evm.permit2Asset || '',
+
+        // SVM network config
+        SVM_NETWORK: svmNetwork,
+        SVM_RPC_URL: config.networks.svm.rpcUrl,
+        SVM_PAYEE_ADDRESS: config.svmPayTo,
+
+        // Aptos network config
+        APTOS_NETWORK: config.networks.aptos.caip2,
+        APTOS_RPC_URL: config.networks.aptos.rpcUrl,
+        APTOS_PAYEE_ADDRESS: config.aptosPayTo,
+
+        // Stellar network config
+        STELLAR_NETWORK: config.networks.stellar.caip2,
+        STELLAR_RPC_URL: config.networks.stellar.rpcUrl,
+        STELLAR_PAYEE_ADDRESS: config.stellarPayTo,
+
+        // Facilitator
+        FACILITATOR_URL: config.facilitatorUrl || '',
       }
     };
 
@@ -194,4 +227,23 @@ export class GenericServerProxy extends BaseProxy implements ServerProxy {
   getUrl(): string {
     return `http://localhost:${this.port}`;
   }
-} 
+}
+
+/**
+ * Translates v2 CAIP-2 network format to v1 simple format for legacy servers
+ * 
+ * @param network - Network in CAIP-2 format (e.g., "eip155:84532")
+ * @returns Network in v1 format (e.g., "base-sepolia")
+ */
+function translateNetworkForV1(network: string): string {
+  const networkMap: Record<string, string> = {
+    // Testnets
+    'eip155:84532': 'base-sepolia',
+    'solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1': 'solana-devnet',
+    // Mainnets
+    'eip155:8453': 'base',
+    'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp': 'solana',
+  };
+
+  return networkMap[network] || network;
+}

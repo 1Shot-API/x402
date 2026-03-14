@@ -2,87 +2,143 @@
 
 End-to-end test suite for validating client-server-facilitator communication across languages and frameworks.
 
+## Setup
+
+### First Time Setup
+
+Install all dependencies (TypeScript via pnpm, Go, Python):
+
+```bash
+pnpm install:all
+```
+
+This will:
+1. Install TypeScript dependencies via `pnpm install`
+2. Run `install.sh` and `build.sh` for all clients, servers, and facilitators
+3. Handle nested directories (like `external-proxies/` and `local/`)
+
+For legacy (v1) implementations as well:
+
+```bash
+pnpm install:all:legacy
+```
+
+### Individual Setup
+
+If you only want to set up v2 implementations:
+
+```bash
+pnpm setup
+```
+
+Or manually for a specific component:
+
+```bash
+cd facilitators/go
+bash install.sh
+bash build.sh
+```
+
+## Usage
+
+### Interactive Test Mode
+
+```bash
+pnpm test
+```
+
+Launches an interactive CLI where you can select:
+- **Facilitators** - Payment verification/settlement services (Go, TypeScript)
+- **Servers** - Protected endpoints requiring payment (Express, Gin, Hono, Next.js, FastAPI, Flask, etc.)
+- **Clients** - Payment-capable HTTP clients (axios, fetch, httpx, requests, etc.)
+- **Extensions** - Additional features like Bazaar discovery
+- **Protocols** - EVM, SVM, and/or Aptos networks
+
+Every valid combination of your selections will be tested. For example, selecting 2 facilitators, 3 servers, and 2 clients will generate and run all compatible test scenarios.
+
+### Minimized Test Mode
+
+```bash
+pnpm test --min
+```
+
+Same interactive CLI, but with intelligent test minimization:
+- **90% fewer tests** compared to full mode
+- Each selected component is tested at least once across all variations
+- Skips redundant combinations that provide no additional coverage
+- Example: `legacy-hono` (v1 only) tests once, while `express` (v1+v2, EVM+SVM) tests all 4 combinations
+
+Perfect for rapid iteration during development while maintaining comprehensive coverage.
+
+### Verbose Logging
+
+```bash
+pnpm test -v
+pnpm test --min -v
+```
+
+Add the `-v` flag to any command for verbose output:
+- Prints all facilitator logs
+- Prints all server logs  
+- Prints all client logs
+- Shows detailed information after each test scenario
+
+Useful for debugging test failures or understanding the payment flow.
+
 ## Environment Variables
 
-Required:
-- `ADDRESS`: Server wallet address
-- `PRIVATE_KEY`: Client private key (when running single client)
-
-## Quick Start
+Required environment variables (set in `.env` file):
 
 ```bash
-# Full suite
-pnpm test                     # Run all tests
+# Client wallets
+CLIENT_EVM_PRIVATE_KEY=0x...        # EVM private key for client payments
+CLIENT_SVM_PRIVATE_KEY=...          # Solana private key for client payments
+CLIENT_APTOS_PRIVATE_KEY=...        # Aptos private key for client payments (hex string)
+CLIENT_STELLAR_PRIVATE_KEY=...      # Stellar private key for client payments
 
-# Development mode (recommended)
-pnpm test -d                  # Test on testnet
-pnpm test -d -v               # Test with verbose logging
+# Server payment addresses
+SERVER_EVM_ADDRESS=0x...            # Where servers receive EVM payments
+SERVER_SVM_ADDRESS=...              # Where servers receive Solana payments
+SERVER_APTOS_ADDRESS=0x...          # Where servers receive Aptos payments
+SERVER_STELLAR_ADDRESS=...          # Where servers receive Stellar payments
 
-# Language filters
-pnpm test -d -ts              # Test TypeScript implementations
-pnpm test -d -py              # Test Python implementations
-pnpm test -d -go              # Test Go implementations
+# Facilitator wallets (for payment verification/settlement)
+FACILITATOR_EVM_PRIVATE_KEY=0x...   # EVM private key for facilitator
+FACILITATOR_SVM_PRIVATE_KEY=...     # Solana private key for facilitator
+FACILITATOR_APTOS_PRIVATE_KEY=...   # Aptos private key for facilitator (hex string)
+FACILITATOR_STELLAR_PRIVATE_KEY=... # Stellar private key for facilitator
 ```
 
-## Filtering Tests
+### Account Setup Instructions
 
-### Implementation Filters
-```bash
---client=<name>               # Test specific client
---server=<name>              # Test specific server
+#### Stellar Testnet
 
-# Available implementations
-Clients: httpx, axios, fetch, requests
-Servers: express, fastapi, flask, gin, hono, next
+You need **three separate Stellar accounts** for e2e tests (client, server, facilitator):
 
-# Examples
-pnpm test -d -ts --client=axios     # Test TypeScript axios client
-pnpm test -d -py --server=fastapi   # Test Python FastAPI server
-```
+1. Go to [Stellar Laboratory](https://lab.stellar.org/account/create) ➡️ Generate keypair ➡️ Fund account with Friendbot, then copy the `Secret` and `Public` keys so you can use them.
+2. Add USDC trustline (required for client and server): go to [Fund Account](https://lab.stellar.org/account/fund) ➡️ Paste your `Public Key` ➡️ Add USDC Trustline ➡️ paste your `Secret key` ➡️ Sign transaction ➡️ Add Trustline.
+3. Get testnet USDC from [Circle Faucet](https://faucet.circle.com/) (select Stellar network).
 
-### Language Flags (can combine)
-```bash
--ts, --typescript              # TypeScript implementations
--py, --python                  # Python implementations
--go, --go                      # Go implementations
+> **Note:** The facilitator account only needs XLM (step 1). Client and server accounts need all three steps.
 
-# Examples
-pnpm test -ts -py             # Test TypeScript and Python together
-pnpm test -py -go             # Test Python and Go together
-```
-
-### Environment Filters
-```bash
---network=<name>              # base or base-sepolia
---prod=<true|false>          # true=CDP facilitator, false=no CDP
-
-# Examples
-pnpm test --prod=true        # Test production scenarios
-pnpm test --network=base     # Test on base network
-```
-
-### Common Workflows
+## Example Session
 
 ```bash
-# Local Development
-pnpm test -d -ts                     # TypeScript development
-pnpm test -d -py                     # Python development
-pnpm test -d -ts --server=next       # Next.js middleware development
-pnpm test -d -py --client=httpx      # Python httpx client development
+$ pnpm test --min
 
-# Cross-Language Testing
-pnpm test -ts -py                    # Test TypeScript/Python compatibility
-pnpm test -d -py -go                 # Test Python/Go on testnet
+🎯 Interactive Mode
+==================
 
-# Production Testing
-pnpm test --prod=true -ts            # Test TypeScript in production
-pnpm test --network=base -py         # Test Python on base network
-```
+✔ Select facilitators › go, typescript
+✔ Select servers › express, hono, legacy-express
+✔ Select clients › axios, fetch, httpx
+✔ Select extensions › bazaar
+✔ Select protocol families › EVM, SVM, Aptos, Stellar
 
-### Environment Options
+📊 Coverage-Based Minimization
+Total scenarios: 156
+Selected scenarios: 18 (88.5% reduction)
 
-```bash
--d, --dev                  # Development mode (testnet, no CDP)
--v, --verbose              # Detailed logging
---log-file=<path>          # Save output to file
+✅ Passed: 18
+❌ Failed: 0
 ```
