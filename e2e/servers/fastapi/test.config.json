@@ -2,21 +2,34 @@
   "name": "fastapi",
   "type": "server",
   "language": "python",
-  "description": "Python FastAPI server with x402 payment middleware",
+  "x402Version": 2,
+  "extensions": [
+    "bazaar"
+  ],
+  "description": "Python FastAPI server with x402 v2 payment middleware",
   "endpoints": [
     {
       "path": "/protected",
       "method": "GET",
       "description": "Protected endpoint requiring payment",
       "requiresPayment": true,
-      "protocolFamily": "evm"
+      "protocolFamily": "evm",
+      "transferMethod": "eip3009"
     },
     {
       "path": "/protected-2",
       "method": "GET",
       "description": "Protected endpoint requiring ERC20 payment",
       "requiresPayment": true,
-      "protocolFamily": "evm"
+      "protocolFamily": "evm",
+      "transferMethod": "eip3009"
+    },
+    {
+      "path": "/protected-svm",
+      "method": "GET",
+      "description": "Protected endpoint requiring SVM (Solana) payment",
+      "requiresPayment": true,
+      "protocolFamily": "svm"
     },
     {
       "path": "/health",
@@ -33,14 +46,12 @@
   ],
   "environment": {
     "required": [
-      "EVM_ADDRESS"
+      "EVM_PAYEE_ADDRESS",
+      "SVM_PAYEE_ADDRESS"
     ],
     "optional": [
       "PORT",
-      "USE_CDP_FACILITATOR",
-      "EVM_NETWORK",
-      "CDP_API_KEY_ID",
-      "CDP_API_KEY_SECRET"
+      "FACILITATOR_URL"
     ]
   }
 }
