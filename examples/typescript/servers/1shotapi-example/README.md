@@ -88,4 +88,12 @@ pnpm dev
 
 ## Example Endpoint
 
-`/weather` requires a payment of 0.001 USDC on Base Sepolia and returns a simple weather report.
+`/weather` requires a payment (see `index.ts` for `price` and `network`, e.g. Base `eip155:8453`) and returns a simple weather report.
+
+## Troubleshooting (v2 `Payment-Signature`)
+
+For `x402Version: 2`, `paymentPayload.accepted` must **`deepEqual`** the server’s `PaymentRequirements`, including nested fields like **`extra`**.
+
+The EVM **exact** scheme fills `extra` with token metadata (e.g. `"name": "USD Coin", "version": "2"`). If your client uses `extra: {}` or omits fields, matching fails with **402** even when amount/network/payTo look right.
+
+**Fix:** Decode the **`PAYMENT-REQUIRED`** header from the 402 response and set `accepted` to **exactly** one of the `accepts[]` objects—do not rebuild a partial object by hand.

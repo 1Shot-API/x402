@@ -10,6 +10,7 @@
     "lint:check": "eslint . --ext .ts"
   },
   "dependencies": {
+    "@x402/core": "workspace:*",
     "@1shotapi/x402-facilitator": "workspace:*",
     "@x402/evm": "workspace:*",
     "@x402/express": "workspace:*",
