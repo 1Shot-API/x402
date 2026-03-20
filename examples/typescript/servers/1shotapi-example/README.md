@@ -57,6 +57,13 @@ pnpm install && pnpm build
 cd servers/1shotapi-example
 ```
 
+The example imports `@1shotapi/x402-facilitator`, which loads compiled output from that package’s `dist/` folder. A full `pnpm build` builds it along with other workspace packages. If you see a runtime error like missing export `create1ShotAPIFacilitatorClient`, rebuild the facilitator only:
+
+```bash
+cd ../../   # examples/typescript
+pnpm build --filter @1shotapi/x402-facilitator
+```
+
 3. Run the server:
 
 ```bash

@@ -1,5 +1,6 @@
 packages:
   - packages/core
+  - packages/1shotapi-x402
   - packages/extensions
   - packages/mcp
   - packages/http/*

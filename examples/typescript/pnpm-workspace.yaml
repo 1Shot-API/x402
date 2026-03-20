@@ -12,6 +12,7 @@ packages:
   - "legacy/mcp-embedded-wallet"
   - "legacy/mpc"
   - "../../typescript/packages/core"
+  - "../../typescript/packages/1shotapi-x402"
   - "../../typescript/packages/extensions"
   - "../../typescript/packages/mcp"
   - "../../typescript/packages/http/*"
