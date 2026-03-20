@@ -1,6 +1,6 @@
 {
   "name": "@1shotapi/x402-facilitator",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "types": "./dist/index.d.ts",
@@ -22,7 +22,7 @@
   ],
   "license": "Apache-2.0",
   "author": "1Shot API",
-  "repository": "https://github.com/coinbase/x402",
+  "repository": "https://github.com/1Shot-API/x402",
   "description": "x402 Payment Protocol facilitator package for 1Shot API",
   "devDependencies": {
     "@eslint/js": "^9.24.0",

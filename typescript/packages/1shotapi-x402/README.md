@@ -1,6 +1,14 @@
 # @1shotapi/x402-facilitator
 
-The official 1Shot API facilitator package for the x402 Payment Protocol. This package enables you to integrate x402 payments into your server via 1Shot API's managed facilitator service, enabling seamless payment verification and settlement.
+The official [1Shot API](https://1shotapi.com) facilitator package for the x402 Payment Protocol. This package enables you to integrate x402 payments into your server via 1Shot API's managed facilitator service, enabling seamless payment verification and settlement.
+
+Check out the 1Shot API [x402 documentation](https://docs.1shotapi.com/x402/index.html) and install the 1Shot API [skill package](https://github.com/1Shot-API/skills) for building with agentic coding tools. 
+
+## Setting up your 1Shot API Account
+
+1. Create a free account at https://1shotapi.com
+2. Create a server wallet on the network you want to process payments on & deposit gas tokens.
+3. Import the `transferWithAuthorization` method for your target payment token. 
 
 ## Installation
 
@@ -8,12 +16,16 @@ The official 1Shot API facilitator package for the x402 Payment Protocol. This p
 npm install @1shotapi/x402-facilitator
 ```
 
+For an Express server using the x402 resource server stack, you will also need `@x402/express`, `@x402/core`, and `@x402/evm` (or your chain’s server package) as shown in the example below.
+
 ## Environment Variables
 
 This package uses API keys from the [1Shot API](https://1shotapi.com) service for authenticated operations:
 
-- `ONESHOT_KEY`: Your 1Shot API key
-- `ONESHOT_SECRET`: Your 1Shot API secret
+- `ONESHOT_API_KEY`: Your 1Shot API key
+- `ONESHOT_API_SECRET`: Your 1Shot API secret
+
+You can set these in the environment, or pass `apiKey` / `apiSecret` into `create1ShotAPIFacilitatorClient` (or `createFacilitatorConfig` / `create1ShotAPIAuthHeaders`) explicitly.
 
 ### Endpoint Authentication Requirements
 
@@ -28,42 +40,67 @@ This package uses API keys from the [1Shot API](https://1shotapi.com) service fo
 
 ## Quick Start
 
-```typescript
-// Option 1: Import the default facilitator config
-// Works for list endpoint without credentials, or with CDP_API_KEY_ID and CDP_API_KEY_SECRET environment variables for verify/settle
-import { facilitator } from "@1shotapi/x402-facilitator";
-
-// Option 2: Create a facilitator config, passing in credentials directly
-import { createFacilitatorConfig } from "@1shotapi/x402-facilitator";
-
-const facilitator = createFacilitatorConfig("your-1shot-api-key-id", "your-1shot-api-secret"); // Pass in directly from preferred secret management
-
-// Use the facilitator config in your x402 integration
-```
-
-## Integration Examples
-
-### With Express Middleware
+Use **`create1ShotAPIFacilitatorClient`** when wiring the facilitator into **`x402ResourceServer`** (the pattern used by the official Express integration):
 
 ```typescript
 import express from "express";
-import { paymentMiddleware } from "x402-express";
-import { facilitator } from "@1shotapi/x402-facilitator";
+import {
+  paymentMiddlewareFromHTTPServer,
+  x402HTTPResourceServer,
+  x402ResourceServer,
+} from "@x402/express";
+import type { RoutesConfig } from "@x402/core/server";
+import { ExactEvmScheme } from "@x402/evm/exact/server";
+import { create1ShotAPIFacilitatorClient } from "@1shotapi/x402-facilitator";
+
+const evmAddress = process.env.EVM_ADDRESS as `0x${string}`;
+const facilitatorClient = create1ShotAPIFacilitatorClient({
+  apiKey: process.env.ONESHOT_API_KEY,
+  apiSecret: process.env.ONESHOT_API_SECRET,
+});
+
+const routes = {
+  "GET /weather": {
+    accepts: {
+      scheme: "exact",
+      price: "$0.01",
+      network: "eip155:8453",
+      payTo: evmAddress,
+    },
+    description: "Weather data",
+    mimeType: "application/json",
+  },
+} satisfies RoutesConfig;
+
+const resourceServer = new x402ResourceServer(facilitatorClient)
+  .register("eip155:8453", new ExactEvmScheme());
+
+const httpServer = new x402HTTPResourceServer(resourceServer, routes);
 
 const app = express();
+app.use(paymentMiddlewareFromHTTPServer(httpServer));
 
-// Requires CDP_API_KEY_ID and CDP_API_KEY_SECRET environment variables
-// for payment verification and settlement
-app.use(
-  paymentMiddleware(
-    "0xYourAddress",
-    {
-      "/protected": {
-        price: "$0.10",
-        network: "base-sepolia",
-      },
-    },
-    facilitator, // Use 1Shot API facilitator
-  ),
-);
+app.get("/weather", (_, res) => {
+  res.send({ report: { weather: "sunny", temperature: 70 } });
+});
+
+app.listen(4021);
 ```
+
+A full runnable server (CORS, optional logging hooks, and `onProtectedRequest` debugging) lives in **`examples/typescript/servers/1shotapi-example/index.ts`** in this repository.
+
+### Alternative: facilitator config only
+
+If your stack expects a **`FacilitatorConfig`** (URL + auth) instead of a **`FacilitatorClient`**, use the default export or **`createFacilitatorConfig`**:
+
+```typescript
+import { facilitator, createFacilitatorConfig } from "@1shotapi/x402-facilitator";
+
+// Reads ONESHOT_API_KEY / ONESHOT_API_SECRET from the environment
+const fromEnv = createFacilitatorConfig();
+
+// Or pass credentials directly
+const fromSecrets = createFacilitatorConfig("your-api-key", "your-api-secret");
+```
+
+The pre-built **`facilitator`** constant is `createFacilitatorConfig()` with no arguments (same env resolution as above).
