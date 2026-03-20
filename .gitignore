@@ -1,5 +1,6 @@
 .env
 .env.local
+next-env.d.ts
 node_modules/
 dist/
 .turbo/
